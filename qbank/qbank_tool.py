@@ -28,8 +28,10 @@ def cmd_check(path):
     chapters = list(b.CHAPTERS); n = len(b.Q); errs = []
     if b.TOPIC not in ROTATION: errs.append(f'unknown topic slug {b.TOPIC}')
     if getattr(b, 'AUTHOR', '') not in ('Odelin', 'Brandon'): errs.append("set AUTHOR = 'Odelin' (math and test prep) or 'Brandon' (science)")
-    if n not in (20, 30): errs.append(f'batch must have exactly 20 or 30 questions (has {n})')
-    want = {20: (6, 8, 6), 30: (9, 12, 9)}.get(n, (0, 0, 0))
+    # 75 is the standard daily batch (Brandon, Nov 9, 2026); 30 is the fallback if the site refuses a 75-question import.
+    MIX = {75: (22, 31, 22), 30: (9, 12, 9)}
+    if n not in MIX: errs.append(f'batch must have exactly 75 questions (or 30 for the fallback upload) (has {n})')
+    want = MIX.get(n, (0, 0, 0))
     got = tuple(sum(1 for q in b.Q if q[1] == d) for d in ('easy', 'medium', 'hard'))
     if got != want: errs.append(f'difficulty mix must be {want} easy/medium/hard, got {got}')
     cc = {c: 0 for c in chapters}
