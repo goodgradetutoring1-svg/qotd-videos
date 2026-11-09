@@ -1,6 +1,6 @@
 """Good Grade Qbank daily-batch tool.
   python3 qbank_tool.py check <batch.py>   -> validates, balances answer letters, writes batch.json + carrier PNG
-batch.py defines: TOPIC, CHAPTERS, optional EXISTING (list of existing stems to avoid), NOTES, NEXT, and Q = [(chapter, difficulty, stem, [(correct_text, why), (wrong, why) x3], explanation, check_value_or_None), ...]
+batch.py defines: TOPIC, CHAPTERS, AUTHOR ('Odelin' math/test prep, 'Brandon' science; staff-only field), optional EXISTING (list of existing stems to avoid), NOTES, NEXT, and Q = [(chapter, difficulty, stem, [(correct_text, why), (wrong, why) x3], explanation, check_value_or_None), ...]
 """
 import sys, re, json, html, gzip, zlib, struct, random, hashlib, secrets, difflib, datetime, importlib.util, os
 from fractions import Fraction
@@ -27,6 +27,7 @@ def cmd_check(path):
     spec = importlib.util.spec_from_file_location('b', path); b = importlib.util.module_from_spec(spec); spec.loader.exec_module(b)
     chapters = list(b.CHAPTERS); n = len(b.Q); errs = []
     if b.TOPIC not in ROTATION: errs.append(f'unknown topic slug {b.TOPIC}')
+    if getattr(b, 'AUTHOR', '') not in ('Odelin', 'Brandon'): errs.append("set AUTHOR = 'Odelin' (math and test prep) or 'Brandon' (science)")
     if n not in (20, 30): errs.append(f'batch must have exactly 20 or 30 questions (has {n})')
     want = {20: (6, 8, 6), 30: (9, 12, 9)}.get(n, (0, 0, 0))
     got = tuple(sum(1 for q in b.Q if q[1] == d) for d in ('easy', 'medium', 'hard'))
@@ -101,6 +102,7 @@ def cmd_check(path):
             row['choice_' + 'ABCD'[k]] = x['t']; row['why_' + 'ABCD'[k]] = x['w']
             if x['ok']: row['correct'] = 'ABCD'[k]
         row.update({'explanation': q[4], 'written_on': datetime.date.today().isoformat(), 'status': 'active'})
+        if getattr(b, 'AUTHOR', '') in ('Odelin', 'Brandon'): row['author'] = b.AUTHOR
         rows.append(row)
     today = datetime.date.today().isoformat()
     payload = {'batch_id': f'{today}-{b.TOPIC}', 'topic': b.TOPIC, 'rows': rows,
