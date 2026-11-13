@@ -1,6 +1,8 @@
 """Good Grade Qbank daily-batch tool.
   python3 qbank_tool.py check <batch.py>   -> validates, balances answer letters, writes batch.json + carrier PNG
 batch.py defines: TOPIC, CHAPTERS, AUTHOR ('Odelin' math/test prep, 'Brandon' science; staff-only field), optional EXISTING (list of existing stems to avoid), NOTES, NEXT, and Q = [(chapter, difficulty, stem, [(correct_text, why), (wrong, why) x3], explanation, check_value_or_None), ...]
+Picture questions (approved by the owners Nov 12, 2026): add a 7th item {'image_url': <Media Library URL>, 'image_alt': <the full written description>}.
+At most 2 per batch, and only questions the owners have already approved (see the daily task). The stem must refer to the picture.
 """
 import sys, re, json, html, gzip, zlib, struct, random, hashlib, secrets, difflib, datetime, importlib.util, os
 from fractions import Fraction
@@ -41,8 +43,24 @@ def cmd_check(path):
     for c, k in cc.items():
         if n >= len(chapters) and k < lo: errs.append(f'subtopic "{c}" has {k} questions; spread the batch evenly (at least {lo} each)')
     seen = [norm(s.split(' | ', 1)[-1]) for s in getattr(b, 'EXISTING', [])]
-    for i, (ch, d, stem, choices, expl, check) in enumerate(b.Q, 1):
+    imgs = [q[6] for q in b.Q if len(q) > 6 and q[6]]
+    if len(imgs) > 2: errs.append(f'at most 2 picture questions per batch (has {len(imgs)})')
+    for i, q in enumerate(b.Q, 1):
+        if len(q) not in (6, 7): errs.append(f'Q{i} must have 6 items (or 7 with a picture)'); continue
+        ch, d, stem, choices, expl, check = q[:6]
         tag = f'Q{i}'
+        img = q[6] if len(q) > 6 else None
+        if img:
+            u, a = str(img.get('image_url', '')), str(img.get('image_alt', ''))
+            if not re.match(r'https://(goodgradetutoring\.com/wp-content/uploads/|[a-z0-9-]+\.files\.wordpress\.com/|i\d\.wp\.com/goodgradetutoring\.com/)\S+\.(png|jpg|jpeg|webp)(\?\S*)?$', u, re.I):
+                errs.append(f'{tag} image_url must be the site Media Library URL of a PNG/JPG/WebP (got {u[:80]})')
+            if words(a) < 15: errs.append(f'{tag} image_alt must be the full written description of the picture (15+ words)')
+            if not re.search(r'\b(diagram|figure|picture|graph|chart|table|drawing|number line|grid|image|shown|below|above)\b', stem, re.I):
+                errs.append(f'{tag} picture question: the stem must refer to the picture (e.g. "In the diagram below...")')
+            for bw in BANNED:
+                if bw.lower() in a.lower(): errs.append(f'{tag} image_alt contains banned word "{bw}"')
+            if any(re.search(r'\b' + re.escape(c.strip()) + r'\b', a, re.I) for c in [choices[0][0]] if len(c.strip()) > 2 and not re.fullmatch(r'\d+', c.strip())):
+                errs.append(f'{tag} image_alt seems to contain the correct answer text; the picture must not give away the answer')
         if ch not in chapters: errs.append(f'{tag} subtopic "{ch}" is not one of: {chapters}')
         if d not in ('easy', 'medium', 'hard'): errs.append(f'{tag} bad difficulty {d}')
         if len(choices) != 4: errs.append(f'{tag} needs exactly 4 choices'); continue
@@ -103,6 +121,8 @@ def cmd_check(path):
         for k, x in enumerate(plans[i]):
             row['choice_' + 'ABCD'[k]] = x['t']; row['why_' + 'ABCD'[k]] = x['w']
             if x['ok']: row['correct'] = 'ABCD'[k]
+        if len(q) > 6 and q[6]:
+            row['image_url'] = q[6]['image_url']; row['image_alt'] = q[6]['image_alt']
         row.update({'explanation': q[4], 'written_on': datetime.date.today().isoformat(), 'status': 'active'})
         if getattr(b, 'AUTHOR', '') in ('Odelin', 'Brandon'): row['author'] = b.AUTHOR
         rows.append(row)
@@ -115,7 +135,7 @@ def cmd_check(path):
     raw = b''.join(b'\x00' + b'\xff\xff\xff' * 8 for _ in range(8))
     png = b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', 8, 8, 8, 2, 0, 0, 0)) + chunk(b'ggQb', data) + chunk(b'IDAT', zlib.compress(raw)) + chunk(b'IEND', b'')
     name = f'ggqb-{today}-{secrets.token_hex(5)}.png'; open(name, 'wb').write(png)
-    print('READY', n, 'questions | difficulty', got, '| letters', dict(zip('ABCD', LC)), '| subtopics', cc)
+    print('READY', n, 'questions | pictures', len(imgs), '| difficulty', got, '| letters', dict(zip('ABCD', LC)), '| subtopics', cc)
     print('CARRIER', name, hashlib.sha256(png).hexdigest(), len(png), 'bytes')
 
 if __name__ == '__main__':
