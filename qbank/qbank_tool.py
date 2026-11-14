@@ -7,7 +7,7 @@ At most 2 per batch, and only questions the owners have already approved (see th
 import sys, re, json, html, gzip, zlib, struct, random, hashlib, secrets, difflib, datetime, importlib.util, os
 from fractions import Fraction
 
-ROTATION = ['math-3','math-4','math-5','science-3','science-4','science-5','biology','chemistry','sat-math','act-math',
+ROTATION = ['math-3','math-4','math-5','science-3','science-4','science-5','biology','chemistry','sat-math','act-math','trigonometry',
             'math-k','math-1','math-2','math-6','math-7','math-8','math-9','math-10','math-11','math-12',
             'science-k','science-1','science-2','physics','organic-chemistry','biochemistry','anatomy-physiology',
             'act-english','act-reading','act-science','sat-rw']
