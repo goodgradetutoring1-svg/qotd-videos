@@ -20,3 +20,13 @@ Each line: date posted | slot | theme | topic. The weekly story task reads this 
 2026-11-12 | Thu 16:15 | consultation | Not sure where to start? Free 30-minute consultation
 2026-11-13 | Fri 12:15 | question | How many atoms in one H2SO4 molecule? (chemistry)
 2026-11-13 | Fri 16:15 | answer | 7 atoms; trap 3 = number of elements
+2026-11-16 | Mon 12:15 | question | What is 6 + 4 × 2? (elementary, order of operations)
+2026-11-16 | Mon 16:15 | answer | 14; trap 20 from adding first
+2026-11-17 | Tue 12:15 | study-tip | Keep a mistake notebook (problem, what went wrong, correct steps)
+2026-11-17 | Tue 16:15 | resource | Free ACT practice question PDFs
+2026-11-18 | Wed 12:15 | espanol | Consejo para padres: pídale a su hijo que le explique un problema
+2026-11-18 | Wed 16:15 | blog | ¿Qué es el GPA? Guía para padres de high school
+2026-11-19 | Thu 12:15 | about | Tutoring that fits your schedule (hours, online, English/Spanish)
+2026-11-19 | Thu 16:15 | consultation | What happens in a free consultation? (3 steps)
+2026-11-20 | Fri 12:15 | question | If f(x) = 3x − 5, what is f(4) − f(2)? (SAT/ACT functions)
+2026-11-20 | Fri 16:15 | answer | 6; trap 2 from subtracting the inputs
